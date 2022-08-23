@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+const axios = require("axios").default;
 
 (async () => {
 
@@ -44,7 +45,12 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
     var is_valid = validateURL(image_url);
     if(is_valid){
       // 2. call filterImageFromURL(image_url) to filter the image
-      var result_url = await filterImageFromURL(image_url);
+      
+      const image_buffer = await axios.get(image_url,{
+        method: "GET",
+        responseType:'arraybuffer'
+      })
+      var result_url = await filterImageFromURL(image_buffer.data);
 
       // 3. send the resulting file in the response
       res.sendFile(result_url, function (error) {
