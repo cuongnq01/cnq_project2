@@ -28,7 +28,41 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
+  function validateURL(image_url: string) {
+    const image_url_regex = /(http(s?):)([/|.|\w|\s|-])*\.(?:jpeg|jpg|gif|png|svg)/
+    return image_url.match(image_url_regex);
+  }
 
+  app.get( "/filteredimage", async ( req, res ) => {
+    // 1. validate the image_url query
+    var image_url = req.query.image_url;
+    if (!image_url) {
+      res.status(400).send("Image URL is not being entered");
+      return;
+    }
+    try {
+    var is_valid = validateURL(image_url);
+    if(is_valid){
+      // 2. call filterImageFromURL(image_url) to filter the image
+      var result_url = await filterImageFromURL(image_url);
+
+      // 3. send the resulting file in the response
+      res.sendFile(result_url, function (error) {
+        if (error) {
+          res.status(400).send("Image URL is wrong, please check!")
+        } else {
+          // 4. deletes any files on the server on finish of the response
+          deleteLocalFiles([result_url]);
+        }
+      });
+    }
+    else {
+      res.status(404).send('Image URL was not found')
+    }
+  } catch {
+    res.status(400).send("Image URL is wrong, please check!");
+}
+  });
   //! END @TODO1
   
   // Root Endpoint
